@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { ArrowLeftRight, BarChart3, Megaphone, Minus, Monitor, Pause, Play, Plus, Share2, Undo2, Users } from "lucide-react";
@@ -12,6 +12,7 @@ import { RecordWeatherButton, WeatherBadge } from "@/components/match-weather";
 import { Scoreboard } from "@/components/scoreboard";
 import { MatchStats } from "@/components/match-stats";
 import { MatchSetup } from "@/components/match-setup";
+import { GameCompletionDialog } from "@/components/game-completion-dialog";
 import { useAppShortcut, useShortcutScope } from "@/components/shortcut-provider";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useScreenWakeLock } from "@/hooks/use-screen-wake-lock";
@@ -83,23 +84,30 @@ function LiveMatch({ match }: { match: Match }) {
   const lastIsPoint = lastEvent?.k === "pt";
   const currentSet = state.sets[state.sets.length - 1];
   const setStart = currentSet.games[0] === 0 && currentSet.games[1] === 0 && state.points[0] === 0 && state.points[1] === 0;
+  const [completionEventCount, setCompletionEventCount] = useState<number | null>(null);
+  const showCompletion = completionEventCount === match.events.length && lastIsPoint && !!lastPoint?.gameEnded;
 
   const courtScope = useShortcutScope("court");
   const award = (side: Side) => {
-    if (!done) point(side);
+    if (!done && !showCompletion) point(side);
   };
   useAppShortcut("a", () => award(state.leftTeam), { scope: courtScope, description: "Point to left end" });
   useAppShortcut("l", () => award(state.leftTeam === 0 ? 1 : 0), { scope: courtScope, description: "Point to right end" });
-  useAppShortcut("u", () => undo(), { scope: courtScope, description: "Undo last point" });
+  useAppShortcut("u", () => undo(), { scope: courtScope, description: "Undo last point", enabled: !showCompletion });
 
   const prevLen = useRef(match.events.length);
   useEffect(() => {
     if (match.events.length !== prevLen.current) {
       const grew = match.events.length > prevLen.current;
+      const addedOne = match.events.length === prevLen.current + 1;
       prevLen.current = match.events.length;
+      if (!grew) setCompletionEventCount(null);
+      if (addedOne && lastIsPoint && lastPoint?.gameEnded) {
+        setCompletionEventCount(match.events.length);
+      }
       if (grew && settings.announce) speak(scoreCall(match, state, settings.lang), settings.lang, settings.voiceURI);
     }
-  }, [match, state, settings.announce, settings.lang, settings.voiceURI]);
+  }, [match, state, lastIsPoint, lastPoint, settings.announce, settings.lang, settings.voiceURI]);
 
   const share = async () => {
     const r = await shareText(matchSummaryText(match, "game"), "Tennis score");
@@ -140,6 +148,16 @@ function LiveMatch({ match }: { match: Match }) {
 
   return (
     <div className="space-y-5">
+      <GameCompletionDialog
+        match={match}
+        state={state}
+        open={showCompletion}
+        onContinue={() => setCompletionEventCount(null)}
+        onEdit={() => {
+          setCompletionEventCount(null);
+          undo();
+        }}
+      />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight">{`${teamName(match, 0)} vs ${teamName(match, 1)}`}</h1>
