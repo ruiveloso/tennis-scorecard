@@ -76,6 +76,8 @@ function LiveMatch({ match }: { match: Match }) {
   const done = state.winner !== null;
   useScreenWakeLock(settings.keepScreenAwake && !done && match.status === "live");
   const doubles = match.format.type === "doubles";
+  const hasPlayerNotes = match.names.some((row, t) => row.some((_, p) => match.playerNotes[t]?.[p]));
+  const showMatchDetails = (doubles && !done) || hasPlayerNotes;
   const lastPoint = state.log[state.log.length - 1];
   const lastEvent = match.events[match.events.length - 1];
   const lastIsPoint = lastEvent?.k === "pt";
@@ -184,7 +186,7 @@ function LiveMatch({ match }: { match: Match }) {
         </div>
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className={cn("grid gap-5", showMatchDetails && "xl:grid-cols-[minmax(0,1fr)_320px]")}>
         <div className="space-y-4" {...courtScope.bindings}>
           {done && state.winner !== null && (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-green-700 bg-card p-4">
@@ -203,10 +205,11 @@ function LiveMatch({ match }: { match: Match }) {
             </div>
           )}
           <section aria-label="Quick scoring" className="space-y-3">
-            <div>
-              <h2 className="text-sm font-semibold">Quick scoring</h2>
-              <p className="text-sm text-muted-foreground">Use + or tap the court to award a point. Use − to undo the latest point for its winner.</p>
+            <div className="rounded-xl border bg-card p-4">
+              <Scoreboard match={match} state={state} />
             </div>
+            <h2 className="text-sm font-semibold">Quick scoring</h2>
+            <p className="text-sm text-muted-foreground">Use + or tap the court to award a point. Use − to undo the latest point for its winner.</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {([0, 1] as Side[]).map((team) => {
                 const name = teamName(match, team);
@@ -298,10 +301,8 @@ function LiveMatch({ match }: { match: Match }) {
           </div>
         </div>
 
+        {showMatchDetails && (
         <aside className="space-y-4" aria-label="Match details">
-          <div className="rounded-xl border bg-card p-4">
-            <Scoreboard match={match} state={state} />
-          </div>
           {doubles && !done && (
             <div className="space-y-2 rounded-xl border bg-card p-4">
               <h2 className="flex items-center gap-2 font-semibold"><Users className="size-4" aria-hidden="true" /> Service order</h2>
@@ -322,7 +323,7 @@ function LiveMatch({ match }: { match: Match }) {
               )}
             </div>
           )}
-          {match.names.some((row, t) => row.some((_, p) => match.playerNotes[t]?.[p])) && (
+          {hasPlayerNotes && (
             <div className="space-y-1 rounded-xl border bg-card p-4 text-sm">
               <h2 className="font-semibold">Player notes</h2>
               {match.names.flatMap((row, t) =>
@@ -333,6 +334,7 @@ function LiveMatch({ match }: { match: Match }) {
             </div>
           )}
         </aside>
+        )}
       </div>
     </div>
   );
