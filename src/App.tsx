@@ -1,0 +1,40 @@
+import { HashRouter, Route, Routes } from "react-router-dom";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { MotionConfig } from "motion/react";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { ConfirmDialogProvider } from "@/components/confirm-dialog";
+import { queryClient } from "@/lib/query-client";
+import { AppShell } from "@/components/app-shell";
+import { NotFoundPage } from "@/pages/not-found";
+import { routes } from "@/routes";
+import { AppShortcutProvider } from "@/components/shortcut-provider";
+
+// Hash routing, so the app works on any static host (and from a folder) with no server rules.
+export function App() {
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <MotionConfig reducedMotion="user">
+          <AppShortcutProvider>
+            <ConfirmDialogProvider>
+              <HashRouter>
+                <Routes>
+                  <Route path="/" element={<AppShell />}>
+                    {routes.map((r) =>
+                      r.path === "/" ? (
+                        <Route key={r.path} index element={r.element} />
+                      ) : (
+                        <Route key={r.path} path={r.path} element={r.element} />
+                      ),
+                    )}
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Route>
+                </Routes>
+              </HashRouter>
+            </ConfirmDialogProvider>
+          </AppShortcutProvider>
+        </MotionConfig>
+      </QueryClientProvider>
+    </ErrorBoundary>
+  );
+}
