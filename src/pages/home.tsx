@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeftRight, BarChart3, Megaphone, Monitor, Pause, Play, Plus, Share2, Undo2, Users } from "lucide-react";
+import { ArrowLeftRight, BarChart3, Megaphone, Minus, Monitor, Pause, Play, Plus, Share2, Undo2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -202,6 +202,58 @@ function LiveMatch({ match }: { match: Match }) {
               </Button>
             </div>
           )}
+          <section aria-label="Quick scoring" className="space-y-3">
+            <div>
+              <h2 className="text-sm font-semibold">Quick scoring</h2>
+              <p className="text-sm text-muted-foreground">Use + or tap the court to award a point. Use − to undo the latest point for its winner.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {([0, 1] as Side[]).map((team) => {
+                const name = teamName(match, team);
+                const serving = !done && state.serverTeam === team;
+                const canUndo = lastEvent?.k === "pt" && lastEvent.w === team;
+                const score = done
+                  ? state.winner === team ? "Winner" : "Finished"
+                  : !state.game.tiebreak && labels[team] === "0" ? "Love" : labels[team];
+                return (
+                  <div
+                    key={team}
+                    role="group"
+                    aria-labelledby={`quick-score-team-${team}`}
+                    className={cn("min-w-0 space-y-3 rounded-xl p-4 text-white", team === 0 ? "bg-blue-700" : "bg-red-700")}
+                  >
+                    <h3 id={`quick-score-team-${team}`} className="break-words text-center text-xl font-semibold">{name}</h3>
+                    <div className="flex items-center justify-between gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-12 shrink-0 rounded-full bg-white text-zinc-950 hover:bg-white/90 hover:text-zinc-950 disabled:opacity-40 [&_svg]:size-6"
+                        aria-label={`Undo last point for ${name}`}
+                        disabled={!canUndo}
+                        onClick={undo}
+                      >
+                        <Minus aria-hidden="true" />
+                      </Button>
+                      <span className="min-w-0 break-words text-center text-4xl font-bold tabular-nums">{score}</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-12 shrink-0 rounded-full bg-white text-zinc-950 hover:bg-white/90 hover:text-zinc-950 disabled:opacity-40 [&_svg]:size-6"
+                        aria-label={`Add point to ${name}`}
+                        disabled={done}
+                        onClick={() => award(team)}
+                      >
+                        <Plus aria-hidden="true" />
+                      </Button>
+                    </div>
+                    <p className="min-h-5 break-words text-center text-sm">
+                      {serving ? `${serverLabel} serving` : done ? "Match complete" : "Receiving"}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
           <Court
             surface={settings.surface}
             doubles={doubles}
