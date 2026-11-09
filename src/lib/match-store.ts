@@ -13,6 +13,7 @@ export interface CoachMatch {
 
 export interface Settings {
   announce: boolean;
+  keepScreenAwake: boolean;
   lang: "en-GB" | "pt-PT" | "es-ES" | "fr-FR" | "de-DE" | "it-IT";
   voiceURI: string;
   showCues: boolean;
@@ -81,6 +82,7 @@ const STORAGE_KEY = "tennis-scorecard-v1";
 
 const DEFAULT_SETTINGS: Settings = {
   announce: false,
+  keepScreenAwake: false,
   lang: "en-GB",
   voiceURI: "",
   showCues: true,
@@ -113,7 +115,11 @@ function sanitize(parsed: Partial<Persisted>): Persisted {
     matches: Array.isArray(parsed.matches) ? parsed.matches : [],
     activeId: typeof parsed.activeId === "string" ? parsed.activeId : null,
     coach: Array.isArray(parsed.coach) ? parsed.coach : [],
-    settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
+    settings: {
+      ...DEFAULT_SETTINGS,
+      ...(parsed.settings ?? {}),
+      keepScreenAwake: parsed.settings?.keepScreenAwake === true,
+    },
     recentNames: Array.isArray(parsed.recentNames) ? parsed.recentNames : [],
     lastSetup: isLastSetup(parsed.lastSetup) ? parsed.lastSetup : null,
   };

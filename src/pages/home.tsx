@@ -14,6 +14,7 @@ import { MatchStats } from "@/components/match-stats";
 import { MatchSetup } from "@/components/match-setup";
 import { useAppShortcut, useShortcutScope } from "@/components/shortcut-provider";
 import { useConfirm } from "@/hooks/use-confirm";
+import { useScreenWakeLock } from "@/hooks/use-screen-wake-lock";
 import { useMatchStore } from "@/lib/match-store";
 import { scoreCall, speak } from "@/lib/announcer";
 import { matchSummaryText, shareText } from "@/lib/share";
@@ -73,6 +74,7 @@ function LiveMatch({ match }: { match: Match }) {
   const press = useMemo(() => pressure(match, state), [match, state]);
   const labels = pointLabels(state, match.format.noAd);
   const done = state.winner !== null;
+  useScreenWakeLock(settings.keepScreenAwake && !done && match.status === "live");
   const doubles = match.format.type === "doubles";
   const lastPoint = state.log[state.log.length - 1];
   const lastEvent = match.events[match.events.length - 1];

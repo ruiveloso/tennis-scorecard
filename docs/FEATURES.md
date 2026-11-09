@@ -7,5 +7,5 @@
 - **Court map**: built-in SVG map of pinned courts with distances; no map tiles.
 - **Coach mode**: track set scores for several matches side by side and share all scores.
 - **Guide**: rules and scoring help.
-- **Settings**: announcer language and voice, cues, tags, court surface, weather options, Save backup and Import backup.
+- **Settings**: announcer language and voice, cues, tags, court surface, weather options, Save backup and Import backup. Optional **Keep screen awake** (off by default) keeps the screen on while a live match is open on Score, including the big scoreboard. It releases when scoring is closed, suspended or finished, or when the app is hidden, and requests it again when the app becomes visible. Requires a supported browser and secure context (HTTPS or localhost); device battery-saving settings may refuse or release the lock.
 - **Offline**: installable and works without signal after the first open (service worker, https only).

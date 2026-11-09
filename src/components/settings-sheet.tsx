@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useMatchStore, type Settings } from "@/lib/match-store";
 import { LANG_LABELS, listVoices, sampleCall, speak, speechAvailable } from "@/lib/announcer";
+import { screenWakeLockAvailable } from "@/hooks/use-screen-wake-lock";
 
 export function SettingsSheet() {
   const settings = useMatchStore((s) => s.settings);
@@ -64,6 +65,22 @@ export function SettingsSheet() {
           <SheetTitle>Settings</SheetTitle>
         </SheetHeader>
         <div className="space-y-6 px-4 pb-8">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-4">
+              <Label htmlFor="set-keepScreenAwake" className="leading-snug">Keep screen awake</Label>
+              <Switch
+                id="set-keepScreenAwake"
+                checked={settings.keepScreenAwake}
+                onCheckedChange={(v) => setSettings({ keepScreenAwake: v })}
+                aria-describedby="wake-lock-description"
+              />
+            </div>
+            <p id="wake-lock-description" className="text-sm text-muted-foreground">
+              {screenWakeLockAvailable()
+                ? "Keeps the screen on while a live match is open on Score, including the big scoreboard. Switching apps or battery-saving settings may let it sleep."
+                : "Not supported in this browser or context. Use a supported browser over HTTPS to keep the screen on during live scoring."}
+            </p>
+          </div>
           {toggles.map((t) => (
             <div key={t.key} className="flex items-center justify-between gap-4">
               <Label htmlFor={`set-${t.key}`} className="leading-snug">{t.label}</Label>
